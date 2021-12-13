@@ -21,9 +21,8 @@ let totalcosto = 0;
 
 // Listeners
 cargarEventListeners();
-
-obtenerDatos();
 costos();
+obtenerDatos();
 //Creo una funcion para que capte todos los click's que se den en la pagina
 function cargarEventListeners() {
      // Dispara cuando se presiona "Agregar Carrito"
@@ -36,14 +35,15 @@ function cargarEventListeners() {
      document.addEventListener('DOMContentLoaded', () => {
           $articulosCarrito = JSON.parse(localStorage.getItem('carrito')) || [];
           carritoHTML();
+          sumarPago();
+          //reseteamos el monto a 0 y tomamos el carrito del localstorage para sacar el monto total
+          totalcosto = 0;
+          for (let t = 0; t <  $articulosCarrito.length; t++) {
+               totalcosto = totalcosto + $articulosCarrito[t].precio;             
+          }
+          mostrarPago(totalcosto);
      })
 
-     // Al Vaciar el carrito
-     // $vaciarCarritoBtn.click, () => {
-     //      $articulosCarrito = []; //Se resetea el arreglo del carrito
-     //      vaciarCarrito(); //Se elimina todo el html          
-     //      localStorage.removeItem('carrito'); // se elimina del local storage el item carrito
-     // };
 
      $vaciarCarritoBtn.click(()=>{
           $articulosCarrito = []; //Se resetea el arreglo del carrito
@@ -64,7 +64,26 @@ function agregarCurso(e) {
           const curso = e.target.parentElement.parentElement;
           // Enviamos el producto seleccionado para tomar sus datos
           leerDatosCurso(curso);
+          totalcosto = 0;
+          
      }
+     sumarPago(totalcosto);
+}
+
+//sumamos todos los valores del precio del carrito para hallar el total
+function sumarPago(totalcosto) {
+     for (let t = 0; t <  $articulosCarrito.length; t++) {
+          totalcosto = totalcosto + $articulosCarrito[t].precio;             
+     }
+     mostrarPago(totalcosto);
+}
+
+//aca mostramos el valor obtenido en la casilla correspondiente
+function mostrarPago (totalcosto){
+     let montoPagar = document.querySelector('#pagototal');
+     montoPagar.innerHTML = '';
+
+     montoPagar.innerHTML += `${totalcosto}`;
 }
 
 // Lee los datos del producto seleccionado
@@ -75,7 +94,7 @@ function leerDatosCurso(curso) {
           //se recoge los datos del producto como imagen, titulo, precio, id y cantidad
           imagen: curso.querySelector('img').src,
           titulo: curso.querySelector('h4').textContent,
-          precio: curso.querySelector('.precio .u-pull-right span').textContent,
+          precio: parseInt(curso.querySelector('.precio .u-pull-right span').textContent),
           id: curso.querySelector('a').getAttribute('data-id'), 
           cantidad: 1
      }
@@ -97,13 +116,10 @@ function leerDatosCurso(curso) {
      }  else {
           // si es que el producto seleccionado no estaba en el carrito, solo lo agrego
           //como un objeto mas.
-          $articulosCarrito = [...$articulosCarrito, infoCurso];
+          globalThis.$articulosCarrito = [...$articulosCarrito, infoCurso];
      }
 
      //vemos como se va llenando el carrito de compras
-     console.log($articulosCarrito)    
-
-     // console.log(articulosCarrito)
      carritoHTML();
 }
 
@@ -145,6 +161,11 @@ function carritoHTML() {
           // Con esto se agrega el html al carrito en el tbody
           $contenedorCarrito.append(row);
      });
+     totalcosto = 0;
+     for (let t = 0; t <  $articulosCarrito.length; t++) {
+          totalcosto = totalcosto + $articulosCarrito[t].precio;             
+     }
+     mostrarPago(totalcosto);
 
 
      // agregamos el carrito al Storage
@@ -153,12 +174,11 @@ function carritoHTML() {
 
 
 
-// Aqui le muestro la suma del total del costo del carrito
+// Aqui creamos la casilla donde se mostrara el total del costo del carrito
 function costos(){             
      const costos = document.createElement('td');
-     costos.innerHTML = `total: S/ `;
+     costos.innerHTML = `total: $  <span id="pagototal"></span>`;
      $contenedorCostos.append(costos);
-     
 }
 
 // En esta funcion hacemos la peticion mediante ajax a una API publica sobre
@@ -173,7 +193,6 @@ function obtenerDatos(){
      api.onreadystatechange = function(){
           if(this.status == 200 && this.readyState == 4){
                let datos = JSON.parse(this.responseText);
-               console.log(datos.serie[1])
 
                let resultado = document.querySelector('#cambio-dolar');
                resultado.innerHTML = '';
@@ -193,19 +212,14 @@ function sincronizarStorage() {
 
 // Elimina los cursos del carrito en el DOM
 function vaciarCarrito() {
-     //uso while para que pregunte si mientras hay un hijo, ste sea eliminado
-     // while($contenedorCarrito.firstChild) {
-     //      console.log('asd')
-     //      $contenedorCarrito.removeChild($contenedorCarrito.firstChild);
-     //  }
 
      var hijos = $('#lista-carrito #articulos').children();
 
-     console.log(hijos);
      if (hijos.length > 0) {
           hijos.remove().children();
      }
-      
+     totalcosto = 0;
+     mostrarPago(totalcosto);
 }
 
 //ANIMACIONES
